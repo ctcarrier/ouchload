@@ -20,15 +20,15 @@ class Timing extends Logging {
   var timingEvents: List[TimingEvent] = List()
 }
 
-trait TimingSupport { self: Logging =>
+trait TimingSupport { 
 
   val timing = new Timing
 
   def withTiming[A](s: String)(f: => A): A = {
     val uuid = UUID.randomUUID()
-    timing.timingEvents = TimingEvent(Start, Some(s), System.currentTimeMillis(), Some(uuid)) :: timing.timingEvents
+    timing.timingEvents = TimingEvent(Start, Some(s), System.nanoTime(), Some(uuid)) :: timing.timingEvents
     val result = f
-    timing.timingEvents = TimingEvent(Stop, Some(s), System.currentTimeMillis(), Some(uuid)) :: timing.timingEvents
+    timing.timingEvents = TimingEvent(Stop, Some(s), System.nanoTime(), Some(uuid)) :: timing.timingEvents
     result
   }
 

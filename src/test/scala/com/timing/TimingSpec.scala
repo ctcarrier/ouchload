@@ -24,7 +24,7 @@ class TimingSpec extends Specification with Logging with TimingSupport with Must
 
     def timingTest(executionCount: Int = 1) = {
 
-      val start = System.currentTimeMillis
+      val start = System.nanoTime
       val testObj = new TimingSupport() with Logging {
         for (i <- 0 until executionCount) {
           withTiming("test") {
@@ -33,12 +33,12 @@ class TimingSpec extends Specification with Logging with TimingSupport with Must
         }
       }
       val stats = testObj.getStats
-        val stop = System.currentTimeMillis
+        val stop = System.nanoTime
         val outerTotal = stop - start
 
         stats must not be empty
-        stats.head.averageTime must beGreaterThanOrEqualTo(sleepTime) and beLessThanOrEqualTo(outerTotal)
-        stats.head.totalTime must beGreaterThanOrEqualTo(sleepTime * executionCount) and beLessThanOrEqualTo(outerTotal)
+        stats.head.averageTime must beGreaterThanOrEqualTo(sleepTime * 1000) and beLessThanOrEqualTo(outerTotal)
+        stats.head.totalTime must beGreaterThanOrEqualTo(sleepTime * executionCount * 1000) and beLessThanOrEqualTo(outerTotal)
     }
 
     def timingTestMultipleKeys() = {
