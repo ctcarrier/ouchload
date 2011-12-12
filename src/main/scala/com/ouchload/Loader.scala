@@ -22,8 +22,11 @@ import akka.actor.Actor._
 object ImplicitDefs {
 
   implicit def loadInstance2LoadDsl(l: LoadInstance): LoadDsl = LoadDsl(l)
+
   implicit def loadDsl2LoadInstance(dsl: LoadDsl): LoadInstance = dsl.instance
+
   implicit def loadDsl2LoadInstanceList(dsl: LoadDsl): List[LoadInstance] = List(dsl.instance)
+
   implicit def loadInstance2LoadInstanceList(l: LoadInstance): List[LoadInstance] = List(l)
 }
 
@@ -31,6 +34,7 @@ case class LoadDsl(instance: LoadInstance) {
 
 
   def using(connParam: Int) = LoadDsl(instance.copy(connectionCount = Some(connParam)))
+
   def ~(i: List[LoadInstance]) = instance :: i
 
   def connections = this
@@ -39,39 +43,37 @@ case class LoadDsl(instance: LoadInstance) {
 case class LoadInstance(url: String, connectionCount: Option[Int] = None)
 
 class LoadManager(loaderTask: LoaderTask)
-  extends TimingSupport
-  {
+  extends TimingSupport {
 
   val reportingActor = Actor.registry.actorsFor[ReportingActor].head
   val loadingActor = actorOf(new LoadingActor).start
 
   def start = {
-    val allFutures = loaderTask.jobs.map(job => (loadingActor ? job).mapTo[Future[List[Int]]])
+    val allFutures = loaderTask.jobs.map(job => (loadingActor ? job).mapTo[List[Int]])
     Future.sequence(allFutures, 300000)
   }
-
-
 
 
   class LoadingActor extends Actor {
     def receive = {
       case job: LoaderJob => {
         val actors = List.fill(job.connections)(actorOf(new RequestingActor).start)
-    val futures: List[Future[Int]] = actors.map(x => (x ? job.url).mapTo[Int])
+        val futures: List[Future[Int]] = actors.map(x => (x ? job.url).mapTo[Int])
 
-    val futureList = Future.sequence(futures, 30000)
-    futureList.onComplete(f => {
-      f.result.get match {
-        case list: List[Int] => {
-          val result = list.groupBy(x => x).map(xs => LoadResult(xs._1, xs._2.size))
-          EventHandler.info(this, "Messaging reporter: " + result)
-          reportingActor ! result
-        }
-        case _ => EventHandler.error(this, "Something went wrong")
-      }
-    })
-        futureList.await
-        futureList
+        val futureList = Future.sequence(futures, 30000)
+        futureList.onComplete(f => {
+          f.result.get match {
+            case list: List[Int] => {
+              val result = list.groupBy(x => x).map(xs => LoadResult(xs._1, xs._2.size))
+              EventHandler.info(this, "Messaging reporter: " + result)
+              reportingActor ! result
+              EventHandler.info(this, "Messaging reporter: " + result)
+            }
+            case _ => EventHandler.error(this, "Something went wrong")
+          }
+        })
+
+        self.channel ! futureList.get
       }
     }
   }
@@ -84,7 +86,7 @@ class LoadManager(loaderTask: LoaderTask)
         val request = :/(x)
 
         withTiming(x) {
-          val response =  try {
+          val response = try {
             HttpRegistry.http(request >|)
             200
           } catch {
@@ -100,6 +102,7 @@ class LoadManager(loaderTask: LoaderTask)
       case _ => EventHandler.info(this, "received unknown message")
     }
   }
+
 }
 
 object HttpRegistry {

@@ -12,7 +12,6 @@
         function formSubmit() {
             var url = "/api/loaders";
 
-       var someObj = { loadCommand:"load 'www.example.com' using 50 connections" };
            var comm= $('#loaderCommand').val();
 
           
@@ -21,24 +20,42 @@
               type: "POST",
               url: url,
               data: JSON.stringify({ loadCommand: comm }),
-              contentType: "application/json"
-            }).done(function( msg ) {
-              alert( "Data Saved: " + msg );
-            });
+              contentType: "application/json",
+              dataType: "json",
+              complete: function( msg ) {
+                          alert( "Data Saved: " + JSON.stringify(msg) );
+                            poll(msg)
+                        }
+            })
 
        return false;
+        }
+
+       function poll(id){
+            $.ajax({ url: "/api/loaders/4ee556f876907d10a13da35f", success: function(data){
+                alert("Data from poll: " + JSON.stringify(data))
+                $('#results').append('<p>Test</p>');
+
+            }, contentType: "application/json", dataType: "json", complete: poll, timeout: 30000 });
         }
 
         $('#searchAnchor').click(formSubmit);
 
         });
    </script>
+    <script type="text/javascript">
+        
+    </script>
 </head>
 <body>
-
+<div>
         <textarea id="loaderCommand" rows="10" cols="50" >load "www.example.com" using 5 connections</textarea>
         <br />
         <input id="searchAnchor" type="button" value="Submit form" />
+    </div>
+<div id="results">
+    
+</div>
 </body>
 </html>
 

@@ -1,16 +1,14 @@
 package com.ouchload.service
 
 import com.ouchload.LoadManager
-import com.mongodb.casbah.{MongoCollection, MongoDB}
-import com.novus.salat._
-import com.novus.salat.global._
-import org.bson.types.ObjectId
 import akka.dispatch.Future
-import com.mongodb.casbah.commons.MongoDBObject
 import java.util.Date
 import com.ouchload.job._
-import com.mongodb.casbah.Imports._
 
+import com.mongodb.casbah.commons.MongoDBObject
+import com.mongodb.casbah.Imports._
+import com.novus.salat._
+import com.novus.salat.global._
 /**
  * @author chris_carrier
  * @version 12/10/11
@@ -20,7 +18,7 @@ import com.mongodb.casbah.Imports._
 trait LoadService {
 
   def saveTask(lt: LoaderTask): Option[LoaderTask]
-  def getLoadJob(objectId: String)
+  def getLoadTask(objectId: String): Option[LoaderTask]
   def getNewJob: Option[LoaderTask]
 }
 
@@ -33,8 +31,11 @@ class LoadServiceImpl(db: MongoCollection) extends LoadService {
     Some(result)
   }
 
-  def getLoadJob(objectId: String) {
-    db.findOne(MongoDBObject("_id" -> objectId))
+  def getLoadTask(objectId: String): Option[LoaderTask] = {
+
+    val dbo = db.findOne(MongoDBObject("_id" -> new ObjectId(objectId)))
+
+    dbo.map(x => grater[LoaderTask].asObject(x))
   }
 
   def getNewJob: Option[LoaderTask] = {

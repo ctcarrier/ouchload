@@ -41,7 +41,7 @@ class Boot extends Initializer with Logging {
   val loadServiceImpl: LoadService = new LoadServiceImpl(db(loadJobCollection))
   val taskExecutingActor = actorOf(new TaskExecutingActor(loadServiceImpl)).start
 
-  Scheduler.schedule(taskExecutingActor, Sync, 1, 5, TimeUnit.SECONDS) //TODO: set job timer to a proper time
+  Scheduler.schedule(taskExecutingActor, Sync, 1, 5, TimeUnit.SECONDS)
 
   // ///////////// INDEXES for collections go here (include all lookup fields)
   //  configsCollection.ensureIndex(MongoDBObject("customerId" -> 1), "idx_customerId")
@@ -56,6 +56,8 @@ class Boot extends Initializer with Logging {
       OneForOneStrategy(List(classOf[Exception]), 3, 100),
       List(
         Supervise(loadService, Permanent),
+      Supervise(taskExecutingActor, Permanent),
+      Supervise(reportingActor, Permanent),
         Supervise(rootService, Permanent)
       )
     )

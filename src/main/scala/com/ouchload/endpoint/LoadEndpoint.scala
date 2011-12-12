@@ -78,7 +78,13 @@ trait LoadEndpoint extends Directives with LiftJsonSupport with Logging {
           resourceId =>
               directGet {
                 ctx =>
-                  "OK"
+                  withErrorHandling(ctx) {
+                withSuccessCallback(ctx) {
+                  Future {
+                    service.getLoadTask(resourceId)
+                  }
+                }
+                  }
               }
 
         } ~
