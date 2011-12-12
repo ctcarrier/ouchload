@@ -15,19 +15,20 @@
     </encoder>
   </appender>
   <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
-    <File>/var/log/zub/campaign.log</File>
+    <File>/var/log/loader.log</File>
     <encoder>
       <pattern>[%4p] [%d{ISO8601}] [%t] %c{1}: %m%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>/var/log/zub/campaign.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
+      <fileNamePattern>/var/log/loader.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
     </rollingPolicy>
   </appender>
 
   <logger name="org.eclipse.jetty.util" level="ERROR" />
   <logger name="org.apache.http" level="ERROR" />
+    <logger name="dispatch" level="ERROR" />
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="R"/>
       <appender-ref ref="stdout"/>
   </root>
